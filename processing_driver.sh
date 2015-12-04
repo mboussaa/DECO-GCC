@@ -83,7 +83,7 @@ for j in `seq 1 1`;
 #rm /shared/epoch_time.csv;
 #docker run --name=execution_container_"$x" -v /shared:/shared ubuntu /bin/bash -c "cd /shared/cBench_V1.1/$i/src_work/ && TIMEFORMAT='%3R' &&  time(./__run $j 1) 2>> /shared/statistics/time_'$i'.csv"
 #docker run --name=execution_container_"$x" -v /shared:/shared ubuntu /bin/bash -c " cd /shared/cBench_V1.1/$i/src_work/ && TIMEFORMAT='%3R' &&  time(./__run $j 20) 2>> /shared/statistics/time_'$i'.csv && sleep 1"
-docker run --memory-swap -1  --name=execution_container_"$i"_"$x" -v /shared:/shared ubuntu /bin/bash -c "cd /shared/cBench_V1.1/$i/src_work/ && ./__run $j 50000000"
+docker run --memory-swap -1  --name=execution_container_"$i"_"$x" -v /shared:/shared ubuntu /bin/bash -c "cd /shared/cBench_V1.1/$i/src_work/ && ./__run $j 15000"
 #docker run --name=execution_container_"$x" -v /shared:/shared ubuntu /bin/bash -c " sleep 2"
 #docker run --name=execution_container_"$x" -v /shared:/shared ubuntu /bin/bash -c "time(sleep 1) 2>> /shared/statistics/time_'$i'.csv"
 
