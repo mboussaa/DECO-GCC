@@ -6,11 +6,11 @@
 
 # generate optimization options using Novelty Search
 #
-rm -rf GCCFlagsGenerator
-git clone https://github.com/mboussaa/GCCFlagsGenerator.git
-cd GCCFlagsGenerator
-mvn clean
-mvn install;
+#rm -rf GCCFlagsGenerator
+#git clone https://github.com/mboussaa/GCCFlagsGenerator.git
+#cd GCCFlagsGenerator
+#mvn clean
+#mvn install;
 rm -rf /shared/statistics
 mkdir /shared/statistics
 rm -rf /shared/tmp
@@ -43,6 +43,7 @@ COMPILER=gcc
 benchmarks=`cat bench_list`
 ./all__delete_work_dirs
 ./all__create_work_dirs
+x=`expr $x + 1`;
 for i in $benchmarks
 do
 if [ -d "$i" ]
@@ -51,9 +52,9 @@ then
  cd $i
  if [ -d "src_work" ]
  then
-x=`expr $x + 1`;
+#x=`expr $x + 1`;
   # *** process directory ***
-  echo "**********************************************************"
+    echo "#################################################### compilation ###################################################"
   echo $i
   cd src_work
   ./__compile $COMPILER
@@ -82,13 +83,13 @@ for j in `seq 1 1`;
 #rm /shared/epoch_time.csv;
 #docker run --name=execution_container_"$x" -v /shared:/shared ubuntu /bin/bash -c "cd /shared/cBench_V1.1/$i/src_work/ && TIMEFORMAT='%3R' &&  time(./__run $j 1) 2>> /shared/statistics/time_'$i'.csv"
 #docker run --name=execution_container_"$x" -v /shared:/shared ubuntu /bin/bash -c " cd /shared/cBench_V1.1/$i/src_work/ && TIMEFORMAT='%3R' &&  time(./__run $j 20) 2>> /shared/statistics/time_'$i'.csv && sleep 1"
-docker run --name=execution_container_"$x" -v /shared:/shared ubuntu /bin/bash -c "cd /shared/cBench_V1.1/$i/src_work/ && ./__run $j"
+docker run --memory-swap -1  --name=execution_container_"$i"_"$x" -v /shared:/shared ubuntu /bin/bash -c "cd /shared/cBench_V1.1/$i/src_work/ && ./__run $j 50000000"
 #docker run --name=execution_container_"$x" -v /shared:/shared ubuntu /bin/bash -c " sleep 2"
 #docker run --name=execution_container_"$x" -v /shared:/shared ubuntu /bin/bash -c "time(sleep 1) 2>> /shared/statistics/time_'$i'.csv"
 
 #date +%s >> "/shared/epoch_time.csv"
-#docker stop execution_container_"$x" 
- docker rm -f execution_container_"$x"
+#docker stop execution_container_"$x" @
+ docker rm -f  execution_container_"$i"_"$x"
 #cd /shared/cBench_V1.1/$i/src_work/ && TIMEFORMAT='%3R' &&  time(./__run $j 20) 2>> /shared/statistics/timeOPT_"$i".csv 
 #s=1;
 echo $x;
@@ -107,16 +108,18 @@ fi
 done
 
 
-echo "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^SEQUENCE^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+echo "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^NEW SEQUENCE^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
 
 done < "$file"
-
+sleep 100
 x=0;
 cd /shared/cBench_V1.1
 #benchmarks=*
 benchmarks=`cat bench_list`
 for i in $benchmarks
 do
+rm /shared/tmp/influxdb.json	
+rm /shared/tmp/memory
 if [ -d "$i" ]
 then
  tmp=$PWD
@@ -128,9 +131,9 @@ x=`expr $x + 1`;
 for j in `seq 1 1`;
    do
 
-curl -o /shared/tmp/influxdb.json -G 'http://10.0.0.22:8086/db/cadvisorDB/series?u=root&p=root&pretty=true' --data-urlencode "q=select container_name, max(memory_usage) from stats where container_name =~ /.*execution_container_*/ and memory_usage <> 0 group by container_name"
+curl -o /shared/tmp/influxdb.json -G 'http://10.0.0.22:8086/db/cadvisorDB/series?u=root&p=root&pretty=true' --data-urlencode "q=select container_name, max(memory_usage) from stats where container_name =~ /.*execution_container_"$i"*/ and memory_usage <> 0 group by container_name"
 
-echo "select container_name, max(memory_usage) from stats where container_name =~ /.*execution_container_*/ and memory_usage <> 0 group by container_name"
+echo "select container_name, mean(memory_usage) from stats where container_name =~ /.*execution_container_"$i"*/ and memory_usage <> 0 group by container_name"
 
 #python JSON2CSVFILE.py
 python /shared/JSON2CSVFILE.py
